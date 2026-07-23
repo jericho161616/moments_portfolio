@@ -26,15 +26,8 @@ export const categoryLabel: Record<Category, string> = {
  * set `image` to that path — until then it renders a placeholder.
  */
 export const photos: Photo[] = [
-  { id: "quiet-nave", title: "Quiet Nave", category: "bw", size: "tall", image: null },
-  { id: "amber-hour", title: "Amber Hour", category: "color", image: null },
   { id: "backroad-kodak", title: "Backroad, Kodak 400", category: "film", image: "/images/film/DSC00032.jpg" },
-  { id: "first-look", title: "First Look", category: "color", image: null },
-  { id: "bridge-study", title: "Bridge Study", category: "bw", size: "wide", image: null },
   { id: "market-street", title: "Market Street, Portra", category: "film", image: "/images/film/DSC00034.jpg" },
-  { id: "harbor-light", title: "Harbor Light", category: "color", size: "tall", image: null },
-  { id: "grain-shadow", title: "Grain & Shadow", category: "bw", image: null },
-  { id: "reception-dusk", title: "Reception, Dusk", category: "color", size: "wide", image: null },
   { id: "coastal-road", title: "Coastal Road, Ektar", category: "film", image: "/images/film/DSC00059.jpg" },
   { id: "dsc00011", title: "DSC00011", category: "color", size: "wide", image: "/images/color/dsc00011.jpg" },
   { id: "dsc00071", title: "DSC00071", category: "color", size: "tall", image: "/images/color/dsc00071.jpg" },
@@ -43,4 +36,15 @@ export const photos: Photo[] = [
   { id: "dsc09663", title: "DSC09663", category: "color", image: "/images/color/dsc09663.jpg" },
   { id: "dsc00031", title: "DSC00031", category: "color", size: "wide", image: "/images/color/dsc00031.jpg" },
   { id: "dsc09958", title: "DSC09958", category: "color", image: "/images/color/dsc09958.jpg" },
+  { id: "dsc09562", title: "DSC09562", category: "color", image: "/images/color/dsc09562.jpg" },
+  { id: "dsc09771", title: "DSC09771", category: "color", size: "wide", image: "/images/color/dsc09771.jpg" },
+  { id: "dsc09847", title: "DSC09847", category: "color", size: "wide", image: "/images/color/dsc09847.jpg" },
+  { id: "dsc09849", title: "DSC09849", category: "color", size: "tall", image: "/images/color/dsc09849.jpg" },
+  { id: "dsc09853", title: "DSC09853", category: "color", size: "tall", image: "/images/color/dsc09853.jpg" },
+  { id: "dsc09949", title: "DSC09949", category: "bw", size: "wide", image: "/images/bw/dsc09949.jpg" },
+  { id: "copy-of-dsc05729-1", title: "Copy of DSC05729 1", category: "color", size: "tall", image: "/images/color/copy-of-dsc05729-1.jpg" },
+  { id: "copy-of-dsc06452-1", title: "Copy of DSC06452 1", category: "color", image: "/images/color/copy-of-dsc06452-1.jpg" },
+  { id: "copy-of-dsc07335-1", title: "Copy of DSC07335 1", category: "color", size: "wide", image: "/images/color/copy-of-dsc07335-1.jpg" },
+  { id: "copy-of-dsc07400-1", title: "Copy of DSC07400 1", category: "color", size: "tall", image: "/images/color/copy-of-dsc07400-1.jpg" },
+  { id: "copy-of-dsc05742-1", title: "Copy of DSC05742 1", category: "color", size: "wide", image: "/images/color/copy-of-dsc05742-1.jpg" },
 ];

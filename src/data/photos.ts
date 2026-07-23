@@ -37,4 +37,11 @@ export const photos: Photo[] = [
   { id: "reception-dusk", title: "Reception, Dusk", category: "color", size: "wide", image: null },
   { id: "coastal-road", title: "Coastal Road, Ektar", category: "film", image: "/images/film/DSC00059.jpg" },
   { id: "test-film-4", title: "Untitled", category: "film", size: "tall", image: "/images/film/DSC09737-2.jpg" },
+  { id: "dsc00011", title: "DSC00011", category: "color", size: "wide", image: "/images/color/dsc00011.jpg" },
+  { id: "dsc00071", title: "DSC00071", category: "color", size: "tall", image: "/images/color/dsc00071.jpg" },
+  { id: "dsc09737", title: "DSC09737", category: "bw", size: "wide", image: "/images/bw/dsc09737.jpg" },
+  { id: "dsc00085", title: "DSC00085", category: "color", image: "/images/color/dsc00085.jpg" },
+  { id: "dsc09663", title: "DSC09663", category: "color", image: "/images/color/dsc09663.jpg" },
+  { id: "dsc00031", title: "DSC00031", category: "color", size: "wide", image: "/images/color/dsc00031.jpg" },
+  { id: "dsc09958", title: "DSC09958", category: "color", image: "/images/color/dsc09958.jpg" },
 ];

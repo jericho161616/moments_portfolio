@@ -32,13 +32,16 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const body = await request.json();
-    const { password, id } = body as { password?: string; id?: string };
+    // Accept either a single `id` or a batch `ids` array — the admin page
+    // always sends `ids` now, `id` is kept for backwards compatibility.
+    const { password, id, ids } = body as { password?: string; id?: string; ids?: string[] };
+    const targetIds = ids && ids.length > 0 ? ids : id ? [id] : [];
 
     if (password !== ADMIN_PASSWORD) {
       return new Response(JSON.stringify({ error: "Incorrect password." }), { status: 401 });
     }
-    if (!id) {
-      return new Response(JSON.stringify({ error: "No photo id provided." }), { status: 400 });
+    if (targetIds.length === 0) {
+      return new Response(JSON.stringify({ error: "No photo id(s) provided." }), { status: 400 });
     }
 
     const ref = await gh(`/repos/${OWNER}/${REPO}/git/ref/heads/${BRANCH}`);
@@ -47,41 +50,41 @@ export const POST: APIRoute = async ({ request }) => {
     const baseTreeSha = latestCommit.tree.sha;
 
     const fileRes = await gh(`/repos/${OWNER}/${REPO}/contents/src/data/photos.ts?ref=${BRANCH}`);
-    const currentContent = Buffer.from(fileRes.content, "base64").toString("utf-8");
+    let currentContent = Buffer.from(fileRes.content, "base64").toString("utf-8");
 
-    const lineRegex = new RegExp(`\\n\\s*\\{ id: "${id}".*?\\},?`);
-    const lineMatch = currentContent.match(lineRegex);
-    if (!lineMatch) {
-      return new Response(JSON.stringify({ error: `Photo "${id}" not found in photos.ts.` }), { status: 404 });
+    const treeItems: { path: string; mode: "100644"; type: "blob"; sha: string | null }[] = [];
+    const removed: string[] = [];
+    const notFound: string[] = [];
+
+    for (const targetId of targetIds) {
+      const lineRegex = new RegExp(`\\n\\s*\\{ id: "${targetId}".*?\\},?`);
+      const lineMatch = currentContent.match(lineRegex);
+      if (!lineMatch) {
+        notFound.push(targetId);
+        continue;
+      }
+
+      const imagePathMatch = lineMatch[0].match(/image:\s*"([^"]+)"/);
+      currentContent = currentContent.replace(lineRegex, "");
+      removed.push(targetId);
+
+      if (imagePathMatch) {
+        const publicPath = imagePathMatch[1];
+        treeItems.push({ path: `public${publicPath}`, mode: "100644", type: "blob", sha: null });
+      }
     }
 
-    const imagePathMatch = lineMatch[0].match(/image:\s*"([^"]+)"/);
-    const updatedContent = currentContent.replace(lineRegex, "");
+    if (removed.length === 0) {
+      return new Response(JSON.stringify({ error: `No matching photo(s) found: ${notFound.join(", ")}` }), {
+        status: 404,
+      });
+    }
 
     const photosBlob = await gh(`/repos/${OWNER}/${REPO}/git/blobs`, {
       method: "POST",
-      body: JSON.stringify({ content: updatedContent, encoding: "utf-8" }),
+      body: JSON.stringify({ content: currentContent, encoding: "utf-8" }),
     });
-
-    const treeItems: { path: string; mode: "100644"; type: "blob"; sha: string }[] = [
-      { path: "src/data/photos.ts", mode: "100644", type: "blob", sha: photosBlob.sha },
-    ];
-
-    // Also remove the image file itself, if it pointed at one under public/images.
-    if (imagePathMatch) {
-      const publicPath = imagePathMatch[1];
-      const repoPath = `public${publicPath}`;
-      try {
-        const existing = await gh(`/repos/${OWNER}/${REPO}/contents/${repoPath}?ref=${BRANCH}`);
-        // Deleting a blob via the tree API means omitting it; the contents API delete
-        // endpoint needs its own commit, so instead we mark it for removal by using
-        // a tree entry with sha: null, which git trees support for deletions.
-        treeItems.push({ path: repoPath, mode: "100644", type: "blob", sha: null as unknown as string });
-        void existing;
-      } catch {
-        // File didn't exist or couldn't be found — nothing to remove, continue.
-      }
-    }
+    treeItems.push({ path: "src/data/photos.ts", mode: "100644", type: "blob", sha: photosBlob.sha });
 
     const newTree = await gh(`/repos/${OWNER}/${REPO}/git/trees`, {
       method: "POST",
@@ -91,7 +94,7 @@ export const POST: APIRoute = async ({ request }) => {
     const newCommit = await gh(`/repos/${OWNER}/${REPO}/git/commits`, {
       method: "POST",
       body: JSON.stringify({
-        message: `Remove photo "${id}" via admin`,
+        message: `Remove ${removed.length} photo(s) via admin`,
         tree: newTree.sha,
         parents: [latestCommitSha],
       }),
@@ -102,7 +105,10 @@ export const POST: APIRoute = async ({ request }) => {
       body: JSON.stringify({ sha: newCommit.sha }),
     });
 
-    return new Response(JSON.stringify({ ok: true, commit: newCommit.sha }), { status: 200 });
+    return new Response(
+      JSON.stringify({ ok: true, commit: newCommit.sha, removed: removed.length, notFound }),
+      { status: 200 },
+    );
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), { status: 500 });
   }

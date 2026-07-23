@@ -29,11 +29,15 @@ import { photos, categoryLabel } from "../data/photos";
       <h2 class="font-serif text-xl italic">Existing photos</h2>
       <p class="mt-1 text-xs text-ink-soft">
         Reflects the last deploy — refresh after a publish/delete finishes rebuilding to see changes here.
+        Select photos, then delete them all in one go — one commit, one redeploy.
       </p>
       <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {
           photos.map((photo) => (
-            <li class="existing-item overflow-hidden rounded-md border border-line" data-id={photo.id}>
+            <li class="existing-item relative overflow-hidden rounded-md border border-line" data-id={photo.id}>
+              <label class="absolute left-2 top-2 z-10">
+                <input type="checkbox" class="existing-checkbox h-4 w-4 accent-ink" data-id={photo.id} />
+              </label>
               {photo.image ? (
                 <img src={photo.image} alt={photo.title} class="h-24 w-full object-cover" />
               ) : (
@@ -44,19 +48,22 @@ import { photos, categoryLabel } from "../data/photos";
               <div class="space-y-1 p-2">
                 <p class="truncate text-xs">{photo.title}</p>
                 <p class="text-[10px] uppercase tracking-widest text-ink-soft">{categoryLabel[photo.category]}</p>
-                <button
-                  type="button"
-                  class="delete-existing-btn text-[10px] uppercase tracking-widest text-accent"
-                  data-id={photo.id}
-                  data-title={photo.title}
-                >
-                  Delete
-                </button>
               </div>
             </li>
           ))
         }
       </ul>
+      <div class="mt-4 flex items-center gap-4">
+        <button
+          id="delete-selected-btn"
+          type="button"
+          disabled
+          class="rounded-full border border-accent px-5 py-2 text-xs uppercase tracking-widest text-accent transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Delete selected (<span id="selected-count">0</span>)
+        </button>
+        <span id="delete-status" class="text-xs text-ink-soft"></span>
+      </div>
     </div>
 
     <div class="mt-8 border-t border-line pt-8">
@@ -301,45 +308,57 @@ import { photos, categoryLabel } from "../data/photos";
     }
   });
 
-  document.querySelectorAll<HTMLButtonElement>(".delete-existing-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      const title = btn.dataset.title ?? "this photo";
-      if (!id) return;
-      if (!window.confirm(`Delete "${title}"? This removes it from the site on the next rebuild.`)) return;
+  const existingCheckboxes = document.querySelectorAll<HTMLInputElement>(".existing-checkbox");
+  const deleteSelectedBtn = document.getElementById("delete-selected-btn") as HTMLButtonElement;
+  const selectedCountEl = document.getElementById("selected-count") as HTMLSpanElement;
+  const deleteStatusEl = document.getElementById("delete-status") as HTMLSpanElement;
 
-      btn.disabled = true;
-      btn.textContent = "Deleting…";
+  function updateSelectedCount() {
+    const count = document.querySelectorAll<HTMLInputElement>(".existing-checkbox:checked").length;
+    selectedCountEl.textContent = String(count);
+    deleteSelectedBtn.disabled = count === 0;
+  }
 
+  existingCheckboxes.forEach((cb) => cb.addEventListener("change", updateSelectedCount));
+
+  deleteSelectedBtn.addEventListener("click", async () => {
+    const checked = Array.from(document.querySelectorAll<HTMLInputElement>(".existing-checkbox:checked"));
+    if (checked.length === 0) return;
+
+    if (!window.confirm(`Delete ${checked.length} photo(s)? This removes them from the site on the next rebuild.`)) {
+      return;
+    }
+
+    deleteSelectedBtn.disabled = true;
+    deleteStatusEl.textContent = "Deleting…";
+
+    try {
+      const ids = checked.map((cb) => cb.dataset.id).filter((id): id is string => Boolean(id));
+      const res = await fetch("/api/delete-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: passwordInput.value, ids }),
+      });
+
+      let data: { error?: string; removed?: number } = {};
       try {
-        const res = await fetch("/api/delete-photo", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: passwordInput.value, id }),
-        });
-
-        let data: { error?: string } = {};
-        try {
-          data = await res.json();
-        } catch {
-          // ignore non-JSON response
-        }
-
-        if (!res.ok) {
-          statusEl.textContent = data.error || `Delete failed (status ${res.status}).`;
-          btn.disabled = false;
-          btn.textContent = "Delete";
-          return;
-        }
-
-        const item = btn.closest(".existing-item");
-        item?.remove();
-        statusEl.textContent = `Deleted "${title}". Site is rebuilding — check back in about a minute.`;
+        data = await res.json();
       } catch {
-        statusEl.textContent = "Network error deleting photo — please try again.";
-        btn.disabled = false;
-        btn.textContent = "Delete";
+        // ignore non-JSON response
       }
-    });
+
+      if (!res.ok) {
+        deleteStatusEl.textContent = data.error || `Delete failed (status ${res.status}).`;
+        deleteSelectedBtn.disabled = false;
+        return;
+      }
+
+      checked.forEach((cb) => cb.closest(".existing-item")?.remove());
+      deleteStatusEl.textContent = `Deleted ${data.removed ?? checked.length} photo(s). Site is rebuilding — check back in about a minute.`;
+      updateSelectedCount();
+    } catch {
+      deleteStatusEl.textContent = "Network error deleting photos — please try again.";
+      deleteSelectedBtn.disabled = false;
+    }
   });
 </script>

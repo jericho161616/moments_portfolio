@@ -1,5 +1,8 @@
 ---
-const frameCount = 84;
+import { photos } from "../data/photos";
+
+const slides = photos.filter((p): p is typeof p & { image: string } => Boolean(p.image)).slice(0, 6);
+const frameCount = photos.length;
 ---
 
 <section class="grid min-h-[88vh] border-b border-line md:grid-cols-[1.1fr_1fr]">
@@ -28,13 +31,47 @@ const frameCount = 84;
     </div>
   </div>
 
-  <div class="relative overflow-hidden border-t border-line md:border-l md:border-t-0">
-    <div
-      class="absolute inset-0 bg-[linear-gradient(155deg,#3a3630_0%,#201e1a_45%,#0d0c0a_100%)]"
-    >
-    </div>
-    <div class="absolute left-5 bottom-5 text-[11px] uppercase tracking-widest text-white/50">
-      Placeholder plate — your photo goes here
+  <div class="relative overflow-hidden border-t border-line md:border-l md:border-t-0" id="hero-slideshow">
+    {
+      slides.length > 0 ? (
+        slides.map((slide, i) => (
+          <img
+            src={slide.image}
+            alt={slide.title}
+            loading={i === 0 ? "eager" : "lazy"}
+            class={`hero-slide absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out ${
+              i === 0 ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))
+      ) : (
+        <div class="absolute inset-0 bg-[linear-gradient(155deg,#3a3630_0%,#201e1a_45%,#0d0c0a_100%)]" />
+      )
+    }
+    <div id="hero-caption" class="absolute left-5 bottom-5 text-[11px] uppercase tracking-widest text-white/50">
+      {slides.length > 0 ? slides[0].title : "Placeholder plate — your photo goes here"}
     </div>
   </div>
 </section>
+
+{
+  slides.length > 1 && (
+    <script define:vars={{ titles: slides.map((s) => s.title) }}>
+      const slideEls = document.querySelectorAll("#hero-slideshow .hero-slide");
+      const captionEl = document.getElementById("hero-caption");
+      let current = 0;
+
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!prefersReducedMotion && slideEls.length > 1) {
+        setInterval(() => {
+          slideEls[current].classList.remove("opacity-100");
+          slideEls[current].classList.add("opacity-0");
+          current = (current + 1) % slideEls.length;
+          slideEls[current].classList.remove("opacity-0");
+          slideEls[current].classList.add("opacity-100");
+          if (captionEl) captionEl.textContent = titles[current];
+        }, 4500);
+      }
+    </script>
+  )
+}

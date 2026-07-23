@@ -50,12 +50,14 @@ const sizeClass: Record<string, string> = {
   <div class="grid grid-cols-2 gap-5 px-5 sm:grid-cols-6 sm:gap-8 sm:px-10" id="gallery-grid">
     {
       photos.map((photo, i) => (
-        <a
-          href="#"
+        <button
+          type="button"
           data-category={photo.category}
-          class={`gallery-tile group relative col-span-1 aspect-square overflow-hidden bg-paper-2 ${
-            sizeClass[photo.size ?? "square"] ?? ""
-          } ${photo.category === "film" ? "film-tile" : ""}`}
+          data-image={photo.image ?? ""}
+          data-title={photo.title}
+          class={`gallery-tile group relative col-span-1 aspect-square w-full overflow-hidden bg-paper-2 text-left ${
+            photo.image ? "cursor-zoom-in" : "cursor-default"
+          } ${sizeClass[photo.size ?? "square"] ?? ""} ${photo.category === "film" ? "film-tile" : ""}`}
         >
           {photo.image ? (
             <img
@@ -78,7 +80,7 @@ const sizeClass: Record<string, string> = {
               {categoryLabel[photo.category]}
             </span>
           </div>
-        </a>
+        </button>
       ))
     }
   </div>
@@ -109,7 +111,7 @@ const sizeClass: Record<string, string> = {
 
 <script>
   const chips = document.querySelectorAll<HTMLButtonElement>(".filter-chip");
-  const tiles = document.querySelectorAll<HTMLAnchorElement>(".gallery-tile");
+  const tiles = document.querySelectorAll<HTMLButtonElement>(".gallery-tile");
   const countEl = document.getElementById("gallery-count");
   const total = tiles.length;
 
@@ -126,6 +128,15 @@ const sizeClass: Record<string, string> = {
       });
 
       if (countEl) countEl.textContent = `${visible} of ${total}`;
+    });
+  });
+
+  tiles.forEach((tile) => {
+    tile.addEventListener("click", () => {
+      const src = tile.dataset.image;
+      const title = tile.dataset.title ?? "";
+      if (!src) return;
+      document.dispatchEvent(new CustomEvent("open-lightbox", { detail: { src, title } }));
     });
   });
 </script>

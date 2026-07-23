@@ -1,0 +1,26 @@
+---
+const links = [
+  { href: "#gallery", label: "Index" },
+  { href: "#gallery?bw", label: "Black & White" },
+  { href: "#gallery?color", label: "Color" },
+  { href: "#gallery?film", label: "Film" },
+  { href: "#about", label: "About" },
+];
+---
+
+<nav
+  class="sticky top-0 z-50 flex items-center justify-between gap-6 border-b border-line bg-paper/90 px-5 py-5 backdrop-blur sm:px-10"
+>
+  <a href="/" class="font-serif text-xl italic tracking-tight">Echo</a>
+  <ul class="hidden gap-6 text-xs uppercase tracking-widest text-ink-soft sm:flex md:gap-8">
+    {
+      links.map((link, i) => (
+        <li class={i === links.length - 1 ? "text-accent" : ""}>
+          <a href={link.href} class="hover:text-ink">
+            {link.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

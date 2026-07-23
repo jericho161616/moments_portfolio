@@ -1,0 +1,131 @@
+---
+import { photos, categoryLabel, type Category } from "../data/photos";
+
+const filters: { key: Category | "all"; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "bw", label: "Black & White" },
+  { key: "color", label: "Color" },
+  { key: "film", label: "Film" },
+];
+
+// Deterministic placeholder gradients, cycling through a small palette.
+const swatches = [
+  "linear-gradient(160deg,#5b5850,#2a2823 60%,#111 100%)",
+  "linear-gradient(200deg,#c9895f,#7a4128 55%,#2a1610 100%)",
+  "linear-gradient(140deg,#7d8a72,#3d4536 60%,#181b14 100%)",
+  "linear-gradient(210deg,#e3b23c,#a24d33 55%,#3a1a15 100%)",
+  "linear-gradient(150deg,#8f8a7e,#4a463d 55%,#1a1815 100%)",
+  "linear-gradient(190deg,#7fa5c9,#3c5b78 55%,#12181e 100%)",
+];
+
+const sizeClass: Record<string, string> = {
+  wide: "sm:col-span-4",
+  tall: "sm:aspect-[0.78]",
+  square: "",
+};
+---
+
+<section id="gallery" class="scroll-mt-20">
+  <div class="flex flex-wrap items-center justify-between gap-4 px-5 py-6 sm:px-10">
+    <div class="flex flex-wrap gap-2" role="tablist" aria-label="Filter photos by category">
+      {
+        filters.map((f) => (
+          <button
+            type="button"
+            role="tab"
+            data-filter={f.key}
+            aria-selected={f.key === "all" ? "true" : "false"}
+            class="filter-chip rounded-full border border-line px-4 py-2 text-xs uppercase tracking-widest text-ink-soft transition-colors aria-selected:border-ink aria-selected:bg-ink aria-selected:text-paper"
+          >
+            {f.label}
+          </button>
+        ))
+      }
+    </div>
+    <span class="text-xs tabular-nums tracking-wide text-ink-soft" id="gallery-count">
+      {photos.length} of {photos.length}
+    </span>
+  </div>
+
+  <div class="grid grid-cols-2 gap-5 px-5 sm:grid-cols-6 sm:gap-8 sm:px-10" id="gallery-grid">
+    {
+      photos.map((photo, i) => (
+        <a
+          href="#"
+          data-category={photo.category}
+          class={`gallery-tile group relative col-span-1 aspect-square overflow-hidden bg-paper-2 ${
+            sizeClass[photo.size ?? "square"] ?? ""
+          } ${photo.category === "film" ? "film-tile" : ""}`}
+        >
+          {photo.image ? (
+            <img
+              src={photo.image}
+              alt={photo.title}
+              loading={i < 4 ? "eager" : "lazy"}
+              class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div
+              class="absolute inset-0 grayscale-[var(--gs,0)] transition-transform duration-500 group-hover:scale-[1.03]"
+              style={`background:${swatches[i % swatches.length]};${
+                photo.category === "bw" ? "--gs:1;filter:grayscale(1);" : ""
+              }`}
+            />
+          )}
+          <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/55 to-transparent px-4 py-3 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <span class="font-serif text-sm italic">{photo.title}</span>
+            <span class="text-[10px] uppercase tracking-widest opacity-75">
+              {categoryLabel[photo.category]}
+            </span>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+
+  <p class="px-5 py-6 text-center text-[11px] text-ink-soft sm:px-10">
+    Tiles without a photo yet are placeholders — drop a file in{" "}
+    <code class="rounded bg-paper-2 px-1 py-0.5">public/images/</code> and set its{" "}
+    <code class="rounded bg-paper-2 px-1 py-0.5">image</code> path in{" "}
+    <code class="rounded bg-paper-2 px-1 py-0.5">src/data/photos.ts</code> to replace it.
+  </p>
+</section>
+
+<style>
+  .film-tile::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.5) 2.5px, transparent 2.6px);
+    background-size: 16px 10px;
+    background-repeat: repeat-x;
+    opacity: 0.35;
+    z-index: 2;
+  }
+</style>
+
+<script>
+  const chips = document.querySelectorAll<HTMLButtonElement>(".filter-chip");
+  const tiles = document.querySelectorAll<HTMLAnchorElement>(".gallery-tile");
+  const countEl = document.getElementById("gallery-count");
+  const total = tiles.length;
+
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const filter = chip.dataset.filter;
+      chips.forEach((c) => c.setAttribute("aria-selected", c === chip ? "true" : "false"));
+
+      let visible = 0;
+      tiles.forEach((tile) => {
+        const match = filter === "all" || tile.dataset.category === filter;
+        tile.classList.toggle("hidden", !match);
+        if (match) visible += 1;
+      });
+
+      if (countEl) countEl.textContent = `${visible} of ${total}`;
+    });
+  });
+</script>

@@ -36,7 +36,6 @@ export const photos: Photo[] = [
   { id: "grain-shadow", title: "Grain & Shadow", category: "bw", image: null },
   { id: "reception-dusk", title: "Reception, Dusk", category: "color", size: "wide", image: null },
   { id: "coastal-road", title: "Coastal Road, Ektar", category: "film", image: "/images/film/DSC00059.jpg" },
-  { id: "test-film-4", title: "Untitled", category: "film", size: "tall", image: "/images/film/DSC09737-2.jpg" },
   { id: "dsc00011", title: "DSC00011", category: "color", size: "wide", image: "/images/color/dsc00011.jpg" },
   { id: "dsc00071", title: "DSC00071", category: "color", size: "tall", image: "/images/color/dsc00071.jpg" },
   { id: "dsc09737", title: "DSC09737", category: "bw", size: "wide", image: "/images/bw/dsc09737.jpg" },

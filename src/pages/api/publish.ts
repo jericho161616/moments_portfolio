@@ -79,7 +79,8 @@ export const POST: APIRoute = async ({ request }) => {
       if (!match) continue;
 
       const base64Data = match[2];
-      const ext = (photo.filename.split(".").pop() || "jpg").toLowerCase();
+      // The admin page always re-encodes to JPEG client-side before upload.
+      const ext = "jpg";
 
       let slug = slugify(photo.title);
       while (usedSlugs.has(slug)) {

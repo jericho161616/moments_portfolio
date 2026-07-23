@@ -110,8 +110,11 @@ import Layout from "../layouts/Layout.astro";
     });
   }
 
-  const MAX_DIMENSION = 2200;
-  const JPEG_QUALITY = 0.82;
+  const MAX_DIMENSION = 1600;
+  const JPEG_QUALITY = 0.72;
+  // Vercel's free tier hard-caps a single request body around 4.5MB.
+  // Leave headroom for JSON overhead + other fields.
+  const MAX_BATCH_BYTES = 3_800_000;
 
   // Vercel's free tier caps a single request body at 4.5MB, and camera-res
   // photos blow past that fast. Downscale + re-encode as JPEG client-side so
@@ -188,41 +191,77 @@ import Layout from "../layouts/Layout.astro";
     renderCards();
   });
 
+  function chunkBySize(photos: StagedPhoto[]): StagedPhoto[][] {
+    const chunks: StagedPhoto[][] = [];
+    let current: StagedPhoto[] = [];
+    let currentBytes = 0;
+
+    for (const photo of photos) {
+      const size = photo.dataUrl.length;
+      if (current.length > 0 && currentBytes + size > MAX_BATCH_BYTES) {
+        chunks.push(current);
+        current = [];
+        currentBytes = 0;
+      }
+      current.push(photo);
+      currentBytes += size;
+    }
+    if (current.length > 0) chunks.push(current);
+    return chunks;
+  }
+
+  async function publishChunk(chunk: StagedPhoto[]) {
+    const res = await fetch("/api/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        password: passwordInput.value,
+        photos: chunk.map((p) => ({
+          title: p.title,
+          category: p.category,
+          size: p.size,
+          filename: p.file.name,
+          dataUrl: p.dataUrl,
+        })),
+      }),
+    });
+
+    let data: { error?: string; added?: number } = {};
+    try {
+      data = await res.json();
+    } catch {
+      // Non-JSON response — likely rejected by the platform before reaching our code.
+    }
+
+    if (!res.ok) {
+      if (res.status === 413) {
+        throw new Error("That batch is still too large for one request — try fewer photos at a time.");
+      }
+      throw new Error(data.error || `Publish failed (status ${res.status}).`);
+    }
+
+    return data.added ?? chunk.length;
+  }
+
   publishBtn.addEventListener("click", async () => {
     if (staged.length === 0) return;
 
     publishBtn.disabled = true;
-    statusEl.textContent = "Publishing…";
+    const chunks = chunkBySize(staged);
+    let published = 0;
 
     try {
-      const res = await fetch("/api/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          password: passwordInput.value,
-          photos: staged.map((p) => ({
-            title: p.title,
-            category: p.category,
-            size: p.size,
-            filename: p.file.name,
-            dataUrl: p.dataUrl,
-          })),
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        statusEl.textContent = data.error || "Something went wrong.";
-        publishBtn.disabled = false;
-        return;
+      for (let i = 0; i < chunks.length; i++) {
+        statusEl.textContent =
+          chunks.length > 1 ? `Publishing batch ${i + 1} of ${chunks.length}…` : "Publishing…";
+        published += await publishChunk(chunks[i]);
       }
 
-      statusEl.textContent = `Published ${data.added} photo(s). Site is rebuilding — check back in about a minute.`;
+      statusEl.textContent = `Published ${published} photo(s). Site is rebuilding — check back in about a minute.`;
       staged.length = 0;
       renderCards();
     } catch (err) {
-      statusEl.textContent = "Network error — please try again.";
+      statusEl.textContent = err instanceof Error ? err.message : "Something went wrong — please try again.";
       publishBtn.disabled = false;
     }
   });

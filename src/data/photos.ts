@@ -26,8 +26,6 @@ export const categoryLabel: Record<Category, string> = {
  * set `image` to that path — until then it renders a placeholder.
  */
 export const photos: Photo[] = [
-  { id: "backroad-kodak", title: "Backroad, Kodak 400", category: "film", image: "/images/film/DSC00032.jpg" },
-  { id: "market-street", title: "Market Street, Portra", category: "film", image: "/images/film/DSC00034.jpg" },
   { id: "coastal-road", title: "Coastal Road, Ektar", category: "film", image: "/images/film/DSC00059.jpg" },
   { id: "dsc00011", title: "DSC00011", category: "color", size: "wide", image: "/images/color/dsc00011.jpg" },
   { id: "dsc00071", title: "DSC00071", category: "color", size: "tall", image: "/images/color/dsc00071.jpg" },

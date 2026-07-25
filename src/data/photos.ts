@@ -45,4 +45,7 @@ export const photos: Photo[] = [
   { id: "copy-of-dsc07335-1", title: "Copy of DSC07335 1", category: "color", size: "wide", image: "/images/color/copy-of-dsc07335-1.jpg" },
   { id: "copy-of-dsc07400-1", title: "Copy of DSC07400 1", category: "color", size: "tall", image: "/images/color/copy-of-dsc07400-1.jpg" },
   { id: "copy-of-dsc05742-1", title: "Copy of DSC05742 1", category: "color", size: "wide", image: "/images/color/copy-of-dsc05742-1.jpg" },
+  { id: "dsc04652", title: "DSC04652", category: "color", image: "/images/color/dsc04652.jpg" },
+  { id: "dsc09697", title: "DSC09697", category: "color", image: "/images/color/dsc09697.jpg" },
+  { id: "dsc09731", title: "DSC09731", category: "color", image: "/images/color/dsc09731.jpg" },
 ];

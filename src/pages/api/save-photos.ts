@@ -8,6 +8,12 @@ const TOKEN = import.meta.env.GITHUB_TOKEN;
 const BRANCH = import.meta.env.GITHUB_BRANCH || "main";
 const ADMIN_PASSWORD = import.meta.env.ADMIN_PASSWORD;
 
+interface Edit {
+  id: string;
+  title?: string;
+  category?: string;
+}
+
 async function gh(path: string, options: RequestInit = {}) {
   const res = await fetch(`https://api.github.com${path}`, {
     ...options,
@@ -32,7 +38,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const body = await request.json();
-    const { password, ids } = body as { password?: string; ids?: string[] };
+    const { password, ids, edits } = body as { password?: string; ids?: string[]; edits?: Edit[] };
 
     if (password !== ADMIN_PASSWORD) {
       return new Response(JSON.stringify({ error: "Incorrect password." }), { status: 401 });
@@ -60,6 +66,22 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(JSON.stringify({ error: "Could not find any photo entries in photos.ts." }), {
         status: 500,
       });
+    }
+
+    const editsById = new Map((edits ?? []).map((e) => [e.id, e]));
+    for (const [id, entry] of entriesById) {
+      const edit = editsById.get(id);
+      if (!edit) continue;
+
+      let updated = entry;
+      if (typeof edit.title === "string") {
+        const safeTitle = edit.title.replace(/"/g, '\\"');
+        updated = updated.replace(/title: "[^"]*"/, `title: "${safeTitle}"`);
+      }
+      if (typeof edit.category === "string") {
+        updated = updated.replace(/category: "[^"]*"/, `category: "${edit.category}"`);
+      }
+      entriesById.set(id, updated);
     }
 
     const orderedIds = [...ids.filter((id) => entriesById.has(id))];
@@ -95,7 +117,7 @@ export const POST: APIRoute = async ({ request }) => {
     const newCommit = await gh(`/repos/${OWNER}/${REPO}/git/commits`, {
       method: "POST",
       body: JSON.stringify({
-        message: "Reorder photos via admin",
+        message: "Update photo order/titles/categories via admin",
         tree: newTree.sha,
         parents: [latestCommitSha],
       }),

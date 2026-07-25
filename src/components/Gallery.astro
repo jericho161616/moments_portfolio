@@ -4,8 +4,10 @@ import { photos, categoryLabel, type Category } from "../data/photos";
 const filters: { key: Category | "all"; label: string }[] = [
   { key: "all", label: "All" },
   { key: "bw", label: "Black & White" },
-  { key: "color", label: "Color" },
   { key: "film", label: "Film" },
+  { key: "events", label: "Events" },
+  { key: "portraits", label: "Portraits" },
+  { key: "travel", label: "Travel" },
 ];
 
 // Deterministic placeholder gradients + aspect ratios, cycling through a small palette
@@ -30,7 +32,7 @@ const swatches = [
             role="tab"
             data-filter={f.key}
             aria-selected={f.key === "all" ? "true" : "false"}
-            class="filter-chip rounded-full border border-line px-4 py-2 text-xs uppercase tracking-widest text-ink-soft transition-colors aria-selected:border-ink aria-selected:bg-ink aria-selected:text-paper"
+            class="filter-chip rounded-full border border-line px-4 py-2 text-xs uppercase tracking-widest text-ink-soft transition-colors hover:border-ink hover:text-ink aria-selected:border-ink aria-selected:bg-ink aria-selected:text-paper"
           >
             {f.label}
           </button>
@@ -50,26 +52,27 @@ const swatches = [
           data-category={photo.category}
           data-image={photo.image ?? ""}
           data-title={photo.title}
-          class={`gallery-tile group relative mb-6 block w-full overflow-hidden bg-paper-2 text-left [break-inside:avoid] sm:mb-8 ${
+          class={`gallery-tile group relative mb-6 block w-full overflow-hidden bg-paper-2 text-left opacity-100 [break-inside:avoid] sm:mb-8 ${
             photo.image ? "cursor-zoom-in" : "cursor-default"
           } ${photo.category === "film" ? "film-tile" : ""}`}
         >
+          <span class="pointer-events-none absolute inset-0 z-10 shadow-[inset_0_0_0_0px_var(--paper)] transition-[box-shadow] duration-500 ease-out group-hover:shadow-[inset_0_0_0_8px_var(--paper)]" />
           {photo.image ? (
             <img
               src={photo.image}
               alt={photo.title}
               loading={i < 4 ? "eager" : "lazy"}
-              class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
+              class="block w-full scale-[1.05] grayscale-[0.7] transition-[transform,filter] duration-700 ease-out group-hover:scale-[1.12] group-hover:grayscale-0"
             />
           ) : (
             <div
-              class="w-full grayscale-[var(--gs,0)] transition-transform duration-500 group-hover:scale-[1.03]"
+              class="w-full scale-[1.05] grayscale-[var(--gs,0.7)] transition-[transform,filter] duration-700 ease-out group-hover:scale-[1.12] group-hover:grayscale-0"
               style={`aspect-ratio:${swatches[i % swatches.length].ratio};background:${swatches[i % swatches.length].bg};${
-                photo.category === "bw" ? "--gs:1;filter:grayscale(1);" : ""
+                photo.category === "bw" ? "--gs:1;" : ""
               }`}
             />
           )}
-          <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/55 to-transparent px-4 py-3 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div class="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex translate-y-2 items-end justify-between gap-2 bg-gradient-to-t from-black/55 to-transparent px-4 py-3 text-white opacity-0 transition-[opacity,transform] duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
             <span class="font-serif text-sm italic">{photo.title}</span>
             <span class="text-[10px] uppercase tracking-widest opacity-75">
               {categoryLabel[photo.category]}
@@ -102,9 +105,19 @@ const swatches = [
     opacity: 0.35;
     z-index: 2;
   }
+
+  .gallery-tile.tile-fade {
+    opacity: 0;
+    transform: scale(0.94);
+    pointer-events: none;
+  }
+  .gallery-tile {
+    transition: opacity 0.45s ease, transform 0.45s ease;
+  }
 </style>
 
 <script>
+  const FADE_MS = 450;
   const chips = document.querySelectorAll<HTMLButtonElement>(".filter-chip");
   const tiles = document.querySelectorAll<HTMLButtonElement>(".gallery-tile");
   const countEl = document.getElementById("gallery-count");
@@ -118,8 +131,14 @@ const swatches = [
       let visible = 0;
       tiles.forEach((tile) => {
         const match = filter === "all" || tile.dataset.category === filter;
-        tile.classList.toggle("hidden", !match);
-        if (match) visible += 1;
+        if (match) {
+          tile.classList.remove("hidden");
+          requestAnimationFrame(() => tile.classList.remove("tile-fade"));
+          visible += 1;
+        } else {
+          tile.classList.add("tile-fade");
+          window.setTimeout(() => tile.classList.add("hidden"), FADE_MS);
+        }
       });
 
       if (countEl) countEl.textContent = `${visible} of ${total}`;

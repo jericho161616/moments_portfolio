@@ -29,9 +29,9 @@ import { photos, categoryLabel } from "../data/photos";
     <div class="mt-8 border-t border-line pt-8">
       <h2 class="font-serif text-xl italic">Existing photos</h2>
       <p class="mt-1 text-xs text-ink-soft">
-        Reflects the last deploy — refresh after a publish/delete/reorder finishes rebuilding to see changes here.
-        Drag by the ⠿ handle to reorder, then hit Save order once — one commit, one redeploy. Select photos to
-        delete them the same way.
+        Reflects the last deploy — refresh after publishing/saving finishes rebuilding to see changes here.
+        Drag by the ⠿ handle to reorder. Edit titles/categories inline, then hit one Save button — everything
+        changed goes out as a single commit, one redeploy.
       </p>
       <ul id="existing-list" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {
@@ -55,8 +55,20 @@ import { photos, categoryLabel } from "../data/photos";
                 </div>
               )}
               <div class="space-y-1 p-2">
-                <p class="truncate text-xs">{photo.title}</p>
-                <p class="text-[10px] uppercase tracking-widest text-ink-soft">{categoryLabel[photo.category]}</p>
+                <input
+                  type="text"
+                  class="existing-title-input w-full border-b border-line pb-0.5 text-xs outline-none focus:border-ink"
+                  value={photo.title}
+                  placeholder="Untitled"
+                  data-id={photo.id}
+                />
+                <select class="existing-category-select w-full rounded border border-line px-1 py-0.5 text-[10px]" data-id={photo.id}>
+                  <option value="bw" selected={photo.category === "bw"}>Black &amp; White</option>
+                  <option value="film" selected={photo.category === "film"}>Film</option>
+                  <option value="events" selected={photo.category === "events"}>Events</option>
+                  <option value="portraits" selected={photo.category === "portraits"}>Portraits</option>
+                  <option value="travel" selected={photo.category === "travel"}>Travel</option>
+                </select>
               </div>
             </li>
           ))
@@ -69,7 +81,7 @@ import { photos, categoryLabel } from "../data/photos";
           disabled
           class="rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Save order
+          Save changes
         </button>
         <button
           id="delete-selected-btn"
@@ -127,8 +139,10 @@ import { photos, categoryLabel } from "../data/photos";
       />
       <select class="category-select w-full rounded border border-line px-2 py-1 text-xs">
         <option value="bw">Black &amp; White</option>
-        <option value="color">Color</option>
         <option value="film">Film</option>
+        <option value="events">Events</option>
+        <option value="portraits">Portraits</option>
+        <option value="travel">Travel</option>
       </select>
       <button type="button" class="remove-btn text-xs uppercase tracking-widest text-accent">
         Remove
@@ -142,7 +156,7 @@ import { photos, categoryLabel } from "../data/photos";
     file: File;
     dataUrl: string;
     title: string;
-    category: "bw" | "color" | "film";
+    category: "bw" | "film" | "events" | "portraits" | "travel";
   }
 
   const fileInput = document.getElementById("file-input") as HTMLInputElement;
@@ -155,10 +169,6 @@ import { photos, categoryLabel } from "../data/photos";
   const masonryPreview = document.getElementById("masonry-preview") as HTMLDivElement;
 
   const staged: StagedPhoto[] = [];
-
-  function titleFromFilename(name: string) {
-    return name.replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ");
-  }
 
   function readAsDataUrl(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -260,7 +270,7 @@ import { photos, categoryLabel } from "../data/photos";
     for (const file of files) {
       const rawDataUrl = await readAsDataUrl(file);
       const dataUrl = await compressImage(rawDataUrl);
-      staged.push({ file, dataUrl, title: titleFromFilename(file.name), category: "color" });
+      staged.push({ file, dataUrl, title: "", category: "travel" });
     }
     statusEl.textContent = "";
     fileInput.value = "";
@@ -400,6 +410,15 @@ import { photos, categoryLabel } from "../data/photos";
   const originalOrder = Array.from(existingList.querySelectorAll<HTMLLIElement>(".existing-item")).map(
     (li) => li.dataset.id,
   );
+  const originalTitles = new Map<string, string>();
+  const originalCategories = new Map<string, string>();
+  existingList.querySelectorAll<HTMLInputElement>(".existing-title-input").forEach((el) => {
+    if (el.dataset.id) originalTitles.set(el.dataset.id, el.value);
+  });
+  existingList.querySelectorAll<HTMLSelectElement>(".existing-category-select").forEach((el) => {
+    if (el.dataset.id) originalCategories.set(el.dataset.id, el.value);
+  });
+
   let dragEl: HTMLLIElement | null = null;
 
   function currentOrder(): string[] {
@@ -408,11 +427,30 @@ import { photos, categoryLabel } from "../data/photos";
       .filter((id): id is string => Boolean(id));
   }
 
-  function orderChanged() {
+  function hasChanges(): boolean {
     const order = currentOrder();
-    const changed = order.length !== originalOrder.length || order.some((id, i) => id !== originalOrder[i]);
-    saveOrderBtn.disabled = !changed;
+    if (order.length !== originalOrder.length || order.some((id, i) => id !== originalOrder[i])) return true;
+
+    let titleOrCategoryChanged = false;
+    existingList.querySelectorAll<HTMLInputElement>(".existing-title-input").forEach((el) => {
+      if (el.dataset.id && originalTitles.get(el.dataset.id) !== el.value) titleOrCategoryChanged = true;
+    });
+    existingList.querySelectorAll<HTMLSelectElement>(".existing-category-select").forEach((el) => {
+      if (el.dataset.id && originalCategories.get(el.dataset.id) !== el.value) titleOrCategoryChanged = true;
+    });
+    return titleOrCategoryChanged;
   }
+
+  function refreshSaveButton() {
+    saveOrderBtn.disabled = !hasChanges();
+  }
+
+  existingList.querySelectorAll<HTMLInputElement>(".existing-title-input").forEach((el) => {
+    el.addEventListener("input", refreshSaveButton);
+  });
+  existingList.querySelectorAll<HTMLSelectElement>(".existing-category-select").forEach((el) => {
+    el.addEventListener("change", refreshSaveButton);
+  });
 
   existingList.querySelectorAll<HTMLLIElement>(".existing-item").forEach((item) => {
     item.addEventListener("dragstart", () => {
@@ -422,7 +460,7 @@ import { photos, categoryLabel } from "../data/photos";
     item.addEventListener("dragend", () => {
       item.classList.remove("opacity-40");
       dragEl = null;
-      orderChanged();
+      refreshSaveButton();
     });
     item.addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -435,14 +473,23 @@ import { photos, categoryLabel } from "../data/photos";
 
   saveOrderBtn.addEventListener("click", async () => {
     const ids = currentOrder();
+    const edits: { id: string; title: string; category: string }[] = [];
+    existingList.querySelectorAll<HTMLLIElement>(".existing-item").forEach((item) => {
+      const id = item.dataset.id;
+      if (!id) return;
+      const titleEl = item.querySelector<HTMLInputElement>(".existing-title-input");
+      const categoryEl = item.querySelector<HTMLSelectElement>(".existing-category-select");
+      edits.push({ id, title: titleEl?.value ?? "", category: categoryEl?.value ?? "" });
+    });
+
     saveOrderBtn.disabled = true;
-    deleteStatusEl.textContent = "Saving order…";
+    deleteStatusEl.textContent = "Saving…";
 
     try {
-      const res = await fetch("/api/reorder-photos", {
+      const res = await fetch("/api/save-photos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: passwordInput.value, ids }),
+        body: JSON.stringify({ password: passwordInput.value, ids, edits }),
       });
 
       let data: { error?: string } = {};
@@ -453,16 +500,20 @@ import { photos, categoryLabel } from "../data/photos";
       }
 
       if (!res.ok) {
-        deleteStatusEl.textContent = data.error || `Save order failed (status ${res.status}).`;
+        deleteStatusEl.textContent = data.error || `Save failed (status ${res.status}).`;
         saveOrderBtn.disabled = false;
         return;
       }
 
       originalOrder.length = 0;
       originalOrder.push(...ids);
-      deleteStatusEl.textContent = "Order saved. Site is rebuilding — check back in about a minute.";
+      edits.forEach((e) => {
+        originalTitles.set(e.id, e.title);
+        originalCategories.set(e.id, e.category);
+      });
+      deleteStatusEl.textContent = "Saved. Site is rebuilding — check back in about a minute.";
     } catch {
-      deleteStatusEl.textContent = "Network error saving order — please try again.";
+      deleteStatusEl.textContent = "Network error saving — please try again.";
       saveOrderBtn.disabled = false;
     }
   });

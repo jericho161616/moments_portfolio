@@ -1,4 +1,4 @@
-export type Category = "bw" | "color" | "film";
+export type Category = "bw" | "film" | "events" | "portraits" | "travel";
 
 export interface Photo {
   /** Unique id, also used as the placeholder swatch seed. */
@@ -16,8 +16,10 @@ export interface Photo {
 
 export const categoryLabel: Record<Category, string> = {
   bw: "B&W",
-  color: "Color",
   film: "Film",
+  events: "Events",
+  portraits: "Portraits",
+  travel: "Travel",
 };
 
 /**
@@ -29,22 +31,22 @@ export const photos: Photo[] = [
   { id: "backroad-kodak", title: "Backroad, Kodak 400", category: "film", image: "/images/film/DSC00032.jpg" },
   { id: "market-street", title: "Market Street, Portra", category: "film", image: "/images/film/DSC00034.jpg" },
   { id: "coastal-road", title: "Coastal Road, Ektar", category: "film", image: "/images/film/DSC00059.jpg" },
-  { id: "dsc00011", title: "DSC00011", category: "color", size: "wide", image: "/images/color/dsc00011.jpg" },
-  { id: "dsc00071", title: "DSC00071", category: "color", size: "tall", image: "/images/color/dsc00071.jpg" },
-  { id: "dsc09737", title: "DSC09737", category: "bw", size: "wide", image: "/images/bw/dsc09737.jpg" },
-  { id: "dsc00085", title: "DSC00085", category: "color", image: "/images/color/dsc00085.jpg" },
-  { id: "dsc09663", title: "DSC09663", category: "color", image: "/images/color/dsc09663.jpg" },
-  { id: "dsc00031", title: "DSC00031", category: "color", size: "wide", image: "/images/color/dsc00031.jpg" },
-  { id: "dsc09958", title: "DSC09958", category: "color", image: "/images/color/dsc09958.jpg" },
-  { id: "dsc09562", title: "DSC09562", category: "color", image: "/images/color/dsc09562.jpg" },
-  { id: "dsc09771", title: "DSC09771", category: "color", size: "wide", image: "/images/color/dsc09771.jpg" },
-  { id: "dsc09847", title: "DSC09847", category: "color", size: "wide", image: "/images/color/dsc09847.jpg" },
-  { id: "dsc09849", title: "DSC09849", category: "color", size: "tall", image: "/images/color/dsc09849.jpg" },
-  { id: "dsc09853", title: "DSC09853", category: "color", size: "tall", image: "/images/color/dsc09853.jpg" },
-  { id: "dsc09949", title: "DSC09949", category: "bw", size: "wide", image: "/images/bw/dsc09949.jpg" },
-  { id: "copy-of-dsc05729-1", title: "Copy of DSC05729 1", category: "color", size: "tall", image: "/images/color/copy-of-dsc05729-1.jpg" },
-  { id: "copy-of-dsc06452-1", title: "Copy of DSC06452 1", category: "color", image: "/images/color/copy-of-dsc06452-1.jpg" },
-  { id: "copy-of-dsc07335-1", title: "Copy of DSC07335 1", category: "color", size: "wide", image: "/images/color/copy-of-dsc07335-1.jpg" },
-  { id: "copy-of-dsc07400-1", title: "Copy of DSC07400 1", category: "color", size: "tall", image: "/images/color/copy-of-dsc07400-1.jpg" },
-  { id: "copy-of-dsc05742-1", title: "Copy of DSC05742 1", category: "color", size: "wide", image: "/images/color/copy-of-dsc05742-1.jpg" },
+  { id: "dsc00011", title: "", category: "travel", size: "wide", image: "/images/color/dsc00011.jpg" },
+  { id: "dsc00071", title: "", category: "travel", size: "tall", image: "/images/color/dsc00071.jpg" },
+  { id: "dsc09737", title: "", category: "bw", size: "wide", image: "/images/bw/dsc09737.jpg" },
+  { id: "dsc00085", title: "", category: "travel", image: "/images/color/dsc00085.jpg" },
+  { id: "dsc09663", title: "", category: "travel", image: "/images/color/dsc09663.jpg" },
+  { id: "dsc00031", title: "", category: "travel", size: "wide", image: "/images/color/dsc00031.jpg" },
+  { id: "dsc09958", title: "", category: "travel", image: "/images/color/dsc09958.jpg" },
+  { id: "dsc09562", title: "", category: "travel", image: "/images/color/dsc09562.jpg" },
+  { id: "dsc09771", title: "", category: "travel", size: "wide", image: "/images/color/dsc09771.jpg" },
+  { id: "dsc09847", title: "", category: "travel", size: "wide", image: "/images/color/dsc09847.jpg" },
+  { id: "dsc09849", title: "", category: "travel", size: "tall", image: "/images/color/dsc09849.jpg" },
+  { id: "dsc09853", title: "", category: "travel", size: "tall", image: "/images/color/dsc09853.jpg" },
+  { id: "dsc09949", title: "", category: "bw", size: "wide", image: "/images/bw/dsc09949.jpg" },
+  { id: "copy-of-dsc05729-1", title: "", category: "travel", size: "tall", image: "/images/color/copy-of-dsc05729-1.jpg" },
+  { id: "copy-of-dsc06452-1", title: "", category: "travel", image: "/images/color/copy-of-dsc06452-1.jpg" },
+  { id: "copy-of-dsc07335-1", title: "", category: "travel", size: "wide", image: "/images/color/copy-of-dsc07335-1.jpg" },
+  { id: "copy-of-dsc07400-1", title: "", category: "travel", size: "tall", image: "/images/color/copy-of-dsc07400-1.jpg" },
+  { id: "copy-of-dsc05742-1", title: "", category: "travel", size: "wide", image: "/images/color/copy-of-dsc05742-1.jpg" },
 ];

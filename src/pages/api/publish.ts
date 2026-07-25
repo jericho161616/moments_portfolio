@@ -8,7 +8,7 @@ const TOKEN = import.meta.env.GITHUB_TOKEN;
 const BRANCH = import.meta.env.GITHUB_BRANCH || "main";
 const ADMIN_PASSWORD = import.meta.env.ADMIN_PASSWORD;
 
-type Category = "bw" | "color" | "film";
+type Category = "bw" | "film" | "events" | "portraits" | "travel";
 
 interface IncomingPhoto {
   title: string;

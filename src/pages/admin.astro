@@ -8,8 +8,9 @@ import { photos, categoryLabel } from "../data/photos";
     <a href="/" class="text-xs uppercase tracking-widest text-ink-soft hover:text-ink">&larr; Back to site</a>
     <h1 class="mt-4 font-serif text-3xl italic">Add photos</h1>
     <p class="mt-2 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
-      Pick your files, set a title/category/size for each, then hit Publish once. Everything
-      goes out as a single commit and the live site rebuilds in about a minute.
+      Pick your files, set a title/category for each, then hit Publish once. Everything goes out
+      as a single commit and the live site rebuilds in about a minute. The gallery is a masonry
+      wall, so photos keep their natural proportions — no need to pick a shape.
     </p>
 
     <div class="mt-8 border-t border-line pt-8">
@@ -95,6 +96,12 @@ import { photos, categoryLabel } from "../data/photos";
 
     <ul id="staged-list" class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2"></ul>
 
+    <div id="preview-section" class="mt-8 hidden border-t border-line pt-8">
+      <h2 class="font-serif text-xl italic">Preview</h2>
+      <p class="mt-1 text-xs text-ink-soft">How these photos will sit in the gallery's masonry wall, before you publish.</p>
+      <div id="masonry-preview" class="mt-4 columns-2 gap-4 sm:columns-3"></div>
+    </div>
+
     <div class="mt-8 flex items-center gap-4 border-t border-line pt-8">
       <button
         id="publish-btn"
@@ -118,18 +125,11 @@ import { photos, categoryLabel } from "../data/photos";
         type="text"
         placeholder="Title"
       />
-      <div class="flex gap-2">
-        <select class="category-select flex-1 rounded border border-line px-2 py-1 text-xs">
-          <option value="bw">Black &amp; White</option>
-          <option value="color">Color</option>
-          <option value="film">Film</option>
-        </select>
-        <select class="size-select flex-1 rounded border border-line px-2 py-1 text-xs">
-          <option value="square">Square</option>
-          <option value="wide">Wide</option>
-          <option value="tall">Tall</option>
-        </select>
-      </div>
+      <select class="category-select w-full rounded border border-line px-2 py-1 text-xs">
+        <option value="bw">Black &amp; White</option>
+        <option value="color">Color</option>
+        <option value="film">Film</option>
+      </select>
       <button type="button" class="remove-btn text-xs uppercase tracking-widest text-accent">
         Remove
       </button>
@@ -143,7 +143,6 @@ import { photos, categoryLabel } from "../data/photos";
     dataUrl: string;
     title: string;
     category: "bw" | "color" | "film";
-    size: "square" | "wide" | "tall";
   }
 
   const fileInput = document.getElementById("file-input") as HTMLInputElement;
@@ -152,6 +151,8 @@ import { photos, categoryLabel } from "../data/photos";
   const statusEl = document.getElementById("status") as HTMLSpanElement;
   const passwordInput = document.getElementById("password") as HTMLInputElement;
   const template = document.getElementById("card-template") as HTMLTemplateElement;
+  const previewSection = document.getElementById("preview-section") as HTMLDivElement;
+  const masonryPreview = document.getElementById("masonry-preview") as HTMLDivElement;
 
   const staged: StagedPhoto[] = [];
 
@@ -204,6 +205,22 @@ import { photos, categoryLabel } from "../data/photos";
     });
   }
 
+  function renderPreview() {
+    masonryPreview.innerHTML = "";
+    previewSection.classList.toggle("hidden", staged.length === 0);
+
+    staged.forEach((photo) => {
+      const tile = document.createElement("div");
+      tile.className = "mb-4 overflow-hidden bg-paper-2 [break-inside:avoid]";
+      const img = document.createElement("img");
+      img.src = photo.dataUrl;
+      img.alt = photo.title;
+      img.className = "block w-full";
+      tile.appendChild(img);
+      masonryPreview.appendChild(tile);
+    });
+  }
+
   function renderCards() {
     stagedList.innerHTML = "";
     staged.forEach((photo, index) => {
@@ -211,20 +228,20 @@ import { photos, categoryLabel } from "../data/photos";
       const img = node.querySelector<HTMLImageElement>(".preview")!;
       const titleInput = node.querySelector<HTMLInputElement>(".title-input")!;
       const categorySelect = node.querySelector<HTMLSelectElement>(".category-select")!;
-      const sizeSelect = node.querySelector<HTMLSelectElement>(".size-select")!;
       const removeBtn = node.querySelector<HTMLButtonElement>(".remove-btn")!;
 
       img.src = photo.dataUrl;
       titleInput.value = photo.title;
       categorySelect.value = photo.category;
-      sizeSelect.value = photo.size;
 
-      titleInput.addEventListener("input", () => (staged[index].title = titleInput.value));
+      titleInput.addEventListener("input", () => {
+        staged[index].title = titleInput.value;
+        renderPreview();
+      });
       categorySelect.addEventListener(
         "change",
         () => (staged[index].category = categorySelect.value as StagedPhoto["category"]),
       );
-      sizeSelect.addEventListener("change", () => (staged[index].size = sizeSelect.value as StagedPhoto["size"]));
       removeBtn.addEventListener("click", () => {
         staged.splice(index, 1);
         renderCards();
@@ -234,6 +251,7 @@ import { photos, categoryLabel } from "../data/photos";
     });
 
     publishBtn.disabled = staged.length === 0;
+    renderPreview();
   }
 
   fileInput.addEventListener("change", async () => {
@@ -242,7 +260,7 @@ import { photos, categoryLabel } from "../data/photos";
     for (const file of files) {
       const rawDataUrl = await readAsDataUrl(file);
       const dataUrl = await compressImage(rawDataUrl);
-      staged.push({ file, dataUrl, title: titleFromFilename(file.name), category: "color", size: "square" });
+      staged.push({ file, dataUrl, title: titleFromFilename(file.name), category: "color" });
     }
     statusEl.textContent = "";
     fileInput.value = "";
@@ -277,7 +295,6 @@ import { photos, categoryLabel } from "../data/photos";
         photos: chunk.map((p) => ({
           title: p.title,
           category: p.category,
-          size: p.size,
           filename: p.file.name,
           dataUrl: p.dataUrl,
         })),

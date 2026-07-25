@@ -8,21 +8,16 @@ const filters: { key: Category | "all"; label: string }[] = [
   { key: "film", label: "Film" },
 ];
 
-// Deterministic placeholder gradients, cycling through a small palette.
+// Deterministic placeholder gradients + aspect ratios, cycling through a small palette
+// so empty tiles still read as an organic masonry wall before real photos land.
 const swatches = [
-  "linear-gradient(160deg,#5b5850,#2a2823 60%,#111 100%)",
-  "linear-gradient(200deg,#c9895f,#7a4128 55%,#2a1610 100%)",
-  "linear-gradient(140deg,#7d8a72,#3d4536 60%,#181b14 100%)",
-  "linear-gradient(210deg,#e3b23c,#a24d33 55%,#3a1a15 100%)",
-  "linear-gradient(150deg,#8f8a7e,#4a463d 55%,#1a1815 100%)",
-  "linear-gradient(190deg,#7fa5c9,#3c5b78 55%,#12181e 100%)",
+  { bg: "linear-gradient(160deg,#5b5850,#2a2823 60%,#111 100%)", ratio: "4 / 5" },
+  { bg: "linear-gradient(200deg,#c9895f,#7a4128 55%,#2a1610 100%)", ratio: "1 / 1" },
+  { bg: "linear-gradient(140deg,#7d8a72,#3d4536 60%,#181b14 100%)", ratio: "3 / 4" },
+  { bg: "linear-gradient(210deg,#e3b23c,#a24d33 55%,#3a1a15 100%)", ratio: "5 / 4" },
+  { bg: "linear-gradient(150deg,#8f8a7e,#4a463d 55%,#1a1815 100%)", ratio: "1 / 1" },
+  { bg: "linear-gradient(190deg,#7fa5c9,#3c5b78 55%,#12181e 100%)", ratio: "4 / 3" },
 ];
-
-const sizeClass: Record<string, string> = {
-  wide: "sm:col-span-4 sm:aspect-[2.35]",
-  tall: "sm:aspect-[0.78]",
-  square: "",
-};
 ---
 
 <section id="gallery" class="scroll-mt-20">
@@ -47,7 +42,7 @@ const sizeClass: Record<string, string> = {
     </span>
   </div>
 
-  <div class="grid grid-cols-2 gap-5 px-5 sm:grid-cols-6 sm:gap-8 sm:px-10" id="gallery-grid">
+  <div class="columns-2 gap-6 px-5 sm:columns-3 sm:gap-8 sm:px-10 lg:columns-4 xl:columns-5" id="gallery-grid">
     {
       photos.map((photo, i) => (
         <button
@@ -55,21 +50,21 @@ const sizeClass: Record<string, string> = {
           data-category={photo.category}
           data-image={photo.image ?? ""}
           data-title={photo.title}
-          class={`gallery-tile group relative col-span-1 aspect-square w-full overflow-hidden bg-paper-2 text-left ${
+          class={`gallery-tile group relative mb-6 block w-full overflow-hidden bg-paper-2 text-left [break-inside:avoid] sm:mb-8 ${
             photo.image ? "cursor-zoom-in" : "cursor-default"
-          } ${sizeClass[photo.size ?? "square"] ?? ""} ${photo.category === "film" ? "film-tile" : ""}`}
+          } ${photo.category === "film" ? "film-tile" : ""}`}
         >
           {photo.image ? (
             <img
               src={photo.image}
               alt={photo.title}
               loading={i < 4 ? "eager" : "lazy"}
-              class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
             />
           ) : (
             <div
-              class="absolute inset-0 grayscale-[var(--gs,0)] transition-transform duration-500 group-hover:scale-[1.03]"
-              style={`background:${swatches[i % swatches.length]};${
+              class="w-full grayscale-[var(--gs,0)] transition-transform duration-500 group-hover:scale-[1.03]"
+              style={`aspect-ratio:${swatches[i % swatches.length].ratio};background:${swatches[i % swatches.length].bg};${
                 photo.category === "bw" ? "--gs:1;filter:grayscale(1);" : ""
               }`}
             />

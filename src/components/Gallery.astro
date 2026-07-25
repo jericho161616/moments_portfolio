@@ -82,13 +82,7 @@ const swatches = [
       ))
     }
   </div>
-
-  <p class="px-5 py-6 text-center text-[11px] text-ink-soft sm:px-10">
-    Tiles without a photo yet are placeholders — drop a file in{" "}
-    <code class="rounded bg-paper-2 px-1 py-0.5">public/images/</code> and set its{" "}
-    <code class="rounded bg-paper-2 px-1 py-0.5">image</code> path in{" "}
-    <code class="rounded bg-paper-2 px-1 py-0.5">src/data/photos.ts</code> to replace it.
-  </p>
+  <div class="h-16 sm:h-20" aria-hidden="true"></div>
 </section>
 
 <style>
@@ -127,6 +121,10 @@ const swatches = [
     chip.addEventListener("click", () => {
       const filter = chip.dataset.filter;
       chips.forEach((c) => c.setAttribute("aria-selected", c === chip ? "true" : "false"));
+
+      document.body.classList.remove("mode-bw", "mode-film");
+      if (filter === "bw") document.body.classList.add("mode-bw");
+      if (filter === "film") document.body.classList.add("mode-film");
 
       let visible = 0;
       tiles.forEach((tile) => {

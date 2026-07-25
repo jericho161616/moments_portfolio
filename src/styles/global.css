@@ -9,6 +9,39 @@ html {
 body {
   background: theme("colors.paper");
   color: theme("colors.ink");
+  transition: background-color 0.5s ease;
+}
+
+/*
+ * Filter "mood" — browsing Black & White or Film tints the page chrome
+ * (background, nav, active chip, wordmark) to match. Photos themselves are
+ * never filtered, so nothing about how a photo looks is ever altered.
+ */
+body.mode-bw {
+  background: #f1efec;
+}
+body.mode-bw #site-nav {
+  background: rgba(241, 239, 236, 0.9);
+  border-color: #d8d4cc;
+}
+body.mode-bw .filter-chip[aria-selected="true"] {
+  background: #111111;
+  border-color: #111111;
+}
+
+body.mode-film {
+  background: #f6ecd9;
+}
+body.mode-film #site-nav {
+  background: rgba(246, 236, 217, 0.9);
+  border-color: #e3d2ad;
+}
+body.mode-film #wordmark {
+  color: #6b4326;
+}
+body.mode-film .filter-chip[aria-selected="true"] {
+  background: #6b4326;
+  border-color: #6b4326;
 }
 
 @media (prefers-reduced-motion: reduce) {

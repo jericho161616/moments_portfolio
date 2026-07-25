@@ -28,8 +28,6 @@ export const categoryLabel: Record<Category, string> = {
  * set `image` to that path — until then it renders a placeholder.
  */
 export const photos: Photo[] = [
-  { id: "backroad-kodak", title: "Backroad, Kodak 400", category: "film", image: "/images/film/DSC00032.jpg" },
-  { id: "market-street", title: "Market Street, Portra", category: "film", image: "/images/film/DSC00034.jpg" },
   { id: "coastal-road", title: "Coastal Road, Ektar", category: "film", image: "/images/film/DSC00059.jpg" },
   { id: "dsc00011", title: "", category: "travel", size: "wide", image: "/images/color/dsc00011.jpg" },
   { id: "dsc00071", title: "", category: "travel", size: "tall", image: "/images/color/dsc00071.jpg" },
@@ -49,4 +47,7 @@ export const photos: Photo[] = [
   { id: "copy-of-dsc07335-1", title: "", category: "travel", size: "wide", image: "/images/color/copy-of-dsc07335-1.jpg" },
   { id: "copy-of-dsc07400-1", title: "", category: "travel", size: "tall", image: "/images/color/copy-of-dsc07400-1.jpg" },
   { id: "copy-of-dsc05742-1", title: "", category: "travel", size: "wide", image: "/images/color/copy-of-dsc05742-1.jpg" },
+  { id: "dsc04652", title: "", category: "travel", image: "/images/color/dsc04652.jpg" },
+  { id: "dsc09697", title: "", category: "travel", image: "/images/color/dsc09697.jpg" },
+  { id: "dsc09731", title: "", category: "travel", image: "/images/color/dsc09731.jpg" },
 ];

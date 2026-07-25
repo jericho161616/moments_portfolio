@@ -28,18 +28,26 @@ import { photos, categoryLabel } from "../data/photos";
     <div class="mt-8 border-t border-line pt-8">
       <h2 class="font-serif text-xl italic">Existing photos</h2>
       <p class="mt-1 text-xs text-ink-soft">
-        Reflects the last deploy — refresh after a publish/delete finishes rebuilding to see changes here.
-        Select photos, then delete them all in one go — one commit, one redeploy.
+        Reflects the last deploy — refresh after a publish/delete/reorder finishes rebuilding to see changes here.
+        Drag by the ⠿ handle to reorder, then hit Save order once — one commit, one redeploy. Select photos to
+        delete them the same way.
       </p>
-      <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <ul id="existing-list" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {
           photos.map((photo) => (
-            <li class="existing-item relative overflow-hidden rounded-md border border-line" data-id={photo.id}>
-              <label class="absolute left-2 top-2 z-10">
+            <li
+              class="existing-item relative overflow-hidden rounded-md border border-line bg-paper"
+              data-id={photo.id}
+              draggable="true"
+            >
+              <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-2 pt-2">
+                <span class="drag-handle cursor-grab select-none rounded bg-ink/60 px-1.5 py-0.5 text-xs leading-none text-paper active:cursor-grabbing">
+                  ⠿
+                </span>
                 <input type="checkbox" class="existing-checkbox h-4 w-4 accent-ink" data-id={photo.id} />
-              </label>
+              </div>
               {photo.image ? (
-                <img src={photo.image} alt={photo.title} class="h-24 w-full object-cover" />
+                <img src={photo.image} alt={photo.title} class="h-24 w-full object-cover" draggable="false" />
               ) : (
                 <div class="flex h-24 w-full items-center justify-center bg-paper-2 text-[10px] uppercase tracking-widest text-ink-soft">
                   Placeholder
@@ -53,7 +61,15 @@ import { photos, categoryLabel } from "../data/photos";
           ))
         }
       </ul>
-      <div class="mt-4 flex items-center gap-4">
+      <div class="mt-4 flex flex-wrap items-center gap-4">
+        <button
+          id="save-order-btn"
+          type="button"
+          disabled
+          class="rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Save order
+        </button>
         <button
           id="delete-selected-btn"
           type="button"
@@ -359,6 +375,78 @@ import { photos, categoryLabel } from "../data/photos";
     } catch {
       deleteStatusEl.textContent = "Network error deleting photos — please try again.";
       deleteSelectedBtn.disabled = false;
+    }
+  });
+
+  const existingList = document.getElementById("existing-list") as HTMLUListElement;
+  const saveOrderBtn = document.getElementById("save-order-btn") as HTMLButtonElement;
+  const originalOrder = Array.from(existingList.querySelectorAll<HTMLLIElement>(".existing-item")).map(
+    (li) => li.dataset.id,
+  );
+  let dragEl: HTMLLIElement | null = null;
+
+  function currentOrder(): string[] {
+    return Array.from(existingList.querySelectorAll<HTMLLIElement>(".existing-item"))
+      .map((li) => li.dataset.id)
+      .filter((id): id is string => Boolean(id));
+  }
+
+  function orderChanged() {
+    const order = currentOrder();
+    const changed = order.length !== originalOrder.length || order.some((id, i) => id !== originalOrder[i]);
+    saveOrderBtn.disabled = !changed;
+  }
+
+  existingList.querySelectorAll<HTMLLIElement>(".existing-item").forEach((item) => {
+    item.addEventListener("dragstart", () => {
+      dragEl = item;
+      item.classList.add("opacity-40");
+    });
+    item.addEventListener("dragend", () => {
+      item.classList.remove("opacity-40");
+      dragEl = null;
+      orderChanged();
+    });
+    item.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!dragEl || dragEl === item) return;
+      const rect = item.getBoundingClientRect();
+      const after = (e as DragEvent).clientX - rect.left > rect.width / 2;
+      item.parentElement?.insertBefore(dragEl, after ? item.nextSibling : item);
+    });
+  });
+
+  saveOrderBtn.addEventListener("click", async () => {
+    const ids = currentOrder();
+    saveOrderBtn.disabled = true;
+    deleteStatusEl.textContent = "Saving order…";
+
+    try {
+      const res = await fetch("/api/reorder-photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: passwordInput.value, ids }),
+      });
+
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // ignore non-JSON response
+      }
+
+      if (!res.ok) {
+        deleteStatusEl.textContent = data.error || `Save order failed (status ${res.status}).`;
+        saveOrderBtn.disabled = false;
+        return;
+      }
+
+      originalOrder.length = 0;
+      originalOrder.push(...ids);
+      deleteStatusEl.textContent = "Order saved. Site is rebuilding — check back in about a minute.";
+    } catch {
+      deleteStatusEl.textContent = "Network error saving order — please try again.";
+      saveOrderBtn.disabled = false;
     }
   });
 </script>

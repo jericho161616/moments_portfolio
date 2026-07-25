@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { photos, categoryLabel } from "../data/photos";
+import { about } from "../data/about";
 ---
 
 <Layout title="Admin — Echo" description="Photo upload — not for public browsing.">
@@ -24,6 +25,111 @@ import { photos, categoryLabel } from "../data/photos";
         class="mt-2 w-full max-w-xs rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-ink"
         placeholder="Enter password"
       />
+    </div>
+
+    <div class="mt-8 border-t border-line pt-8">
+      <h2 class="font-serif text-xl italic">About page</h2>
+      <p class="mt-1 text-xs text-ink-soft">Edit the photo and details shown on /about. Saves as one commit.</p>
+
+      <div class="mt-4 grid gap-6 sm:grid-cols-[160px_1fr]">
+        <div>
+          <div id="about-photo-preview" class="aspect-[4/5] w-full overflow-hidden bg-paper-2">
+            {
+              about.photo ? (
+                <img src={about.photo} alt="" class="h-full w-full object-cover" id="about-photo-img" />
+              ) : (
+                <div class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-ink-soft" id="about-photo-img">
+                  No photo yet
+                </div>
+              )
+            }
+          </div>
+          <label
+            for="about-photo-input"
+            class="mt-2 block w-full cursor-pointer rounded border border-line px-2 py-1.5 text-center text-[10px] uppercase tracking-widest text-ink-soft hover:border-ink hover:text-ink"
+          >
+            Change photo
+          </label>
+          <input id="about-photo-input" type="file" accept="image/*" class="hidden" />
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[10px] uppercase tracking-widest text-ink-soft" for="about-name">Name</label>
+            <input
+              id="about-name"
+              type="text"
+              value={about.name}
+              class="mt-1 w-full rounded border border-line px-2 py-1.5 text-sm outline-none focus:border-ink"
+            />
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase tracking-widest text-ink-soft" for="about-bio">
+              Bio (separate paragraphs with a blank line)
+            </label>
+            <textarea
+              id="about-bio"
+              rows="6"
+              class="mt-1 w-full rounded border border-line px-2 py-1.5 text-sm outline-none focus:border-ink"
+            >{about.bio.join("\n\n")}</textarea>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="block text-[10px] uppercase tracking-widest text-ink-soft" for="about-ig-handle">
+                Instagram handle
+              </label>
+              <input
+                id="about-ig-handle"
+                type="text"
+                value={about.instagramHandle}
+                class="mt-1 w-full rounded border border-line px-2 py-1.5 text-sm outline-none focus:border-ink"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] uppercase tracking-widest text-ink-soft" for="about-ig-url">
+                Instagram URL
+              </label>
+              <input
+                id="about-ig-url"
+                type="text"
+                value={about.instagramUrl}
+                class="mt-1 w-full rounded border border-line px-2 py-1.5 text-sm outline-none focus:border-ink"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] uppercase tracking-widest text-ink-soft" for="about-email">Email</label>
+              <input
+                id="about-email"
+                type="email"
+                value={about.email}
+                class="mt-1 w-full rounded border border-line px-2 py-1.5 text-sm outline-none focus:border-ink"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] uppercase tracking-widest text-ink-soft" for="about-location">
+                Location
+              </label>
+              <input
+                id="about-location"
+                type="text"
+                value={about.location}
+                class="mt-1 w-full rounded border border-line px-2 py-1.5 text-sm outline-none focus:border-ink"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 pt-2">
+            <button
+              id="save-about-btn"
+              type="button"
+              class="rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition-opacity hover:opacity-90"
+            >
+              Save about page
+            </button>
+            <span id="about-status" class="text-xs text-ink-soft"></span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="mt-8 border-t border-line pt-8">
@@ -515,6 +621,86 @@ import { photos, categoryLabel } from "../data/photos";
     } catch {
       deleteStatusEl.textContent = "Network error saving — please try again.";
       saveOrderBtn.disabled = false;
+    }
+  });
+
+  const aboutPhotoInput = document.getElementById("about-photo-input") as HTMLInputElement;
+  const aboutPhotoPreview = document.getElementById("about-photo-preview") as HTMLDivElement;
+  const saveAboutBtn = document.getElementById("save-about-btn") as HTMLButtonElement;
+  const aboutStatusEl = document.getElementById("about-status") as HTMLSpanElement;
+  const aboutNameEl = document.getElementById("about-name") as HTMLInputElement;
+  const aboutBioEl = document.getElementById("about-bio") as HTMLTextAreaElement;
+  const aboutIgHandleEl = document.getElementById("about-ig-handle") as HTMLInputElement;
+  const aboutIgUrlEl = document.getElementById("about-ig-url") as HTMLInputElement;
+  const aboutEmailEl = document.getElementById("about-email") as HTMLInputElement;
+  const aboutLocationEl = document.getElementById("about-location") as HTMLInputElement;
+
+  let aboutPhotoDataUrl: string | null = null;
+
+  aboutPhotoInput.addEventListener("change", async () => {
+    const file = aboutPhotoInput.files?.[0];
+    if (!file) return;
+
+    aboutStatusEl.textContent = "Preparing photo…";
+    const raw = await readAsDataUrl(file);
+    aboutPhotoDataUrl = await compressImage(raw);
+    aboutStatusEl.textContent = "";
+
+    aboutPhotoPreview.innerHTML = "";
+    const img = document.createElement("img");
+    img.src = aboutPhotoDataUrl;
+    img.className = "h-full w-full object-cover";
+    aboutPhotoPreview.appendChild(img);
+  });
+
+  saveAboutBtn.addEventListener("click", async () => {
+    const bio = aboutBioEl.value
+      .split(/\n\s*\n/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    if (!aboutNameEl.value.trim() || bio.length === 0) {
+      aboutStatusEl.textContent = "Name and at least one bio paragraph are required.";
+      return;
+    }
+
+    saveAboutBtn.disabled = true;
+    aboutStatusEl.textContent = "Saving…";
+
+    try {
+      const res = await fetch("/api/save-about", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: passwordInput.value,
+          name: aboutNameEl.value.trim(),
+          bio,
+          instagramHandle: aboutIgHandleEl.value.trim(),
+          instagramUrl: aboutIgUrlEl.value.trim(),
+          email: aboutEmailEl.value.trim(),
+          location: aboutLocationEl.value.trim(),
+          photoDataUrl: aboutPhotoDataUrl,
+        }),
+      });
+
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // ignore non-JSON response
+      }
+
+      if (!res.ok) {
+        aboutStatusEl.textContent = data.error || `Save failed (status ${res.status}).`;
+        saveAboutBtn.disabled = false;
+        return;
+      }
+
+      aboutStatusEl.textContent = "Saved. Site is rebuilding — check back in about a minute.";
+      saveAboutBtn.disabled = false;
+    } catch {
+      aboutStatusEl.textContent = "Network error saving — please try again.";
+      saveAboutBtn.disabled = false;
     }
   });
 </script>

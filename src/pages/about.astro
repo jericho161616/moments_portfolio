@@ -2,47 +2,45 @@
 import Layout from "../layouts/Layout.astro";
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
+import { about } from "../data/about";
 ---
 
-<Layout title="About — Echo" description="Photographer based in Lucena, Quezon Province.">
+<Layout title={`About — ${about.name}`} description={about.location}>
   <Nav />
 
   <main class="mx-auto max-w-5xl px-5 py-14 sm:px-10 sm:py-20">
     <div class="grid gap-10 sm:grid-cols-[0.85fr_1.15fr] sm:gap-14">
       <div class="aspect-[4/5] overflow-hidden bg-paper-2">
-        <div class="h-full w-full bg-[linear-gradient(150deg,#8f8a7e,#4a463d_55%,#1a1815_100%)]"></div>
+        {
+          about.photo ? (
+            <img src={about.photo} alt={about.name} class="h-full w-full object-cover" />
+          ) : (
+            <div class="h-full w-full bg-[linear-gradient(150deg,#8f8a7e,#4a463d_55%,#1a1815_100%)]" />
+          )
+        }
       </div>
 
       <div>
         <span class="text-[11px] uppercase tracking-[0.16em] text-accent">About</span>
-        <h1 class="mb-5 mt-2 font-serif text-4xl italic sm:text-5xl">Echo</h1>
-        <p class="mb-4 max-w-[52ch] leading-relaxed text-ink-soft">
-          I'm a photographer based in Lucena, Quezon Province, working across black &amp; white,
-          film, portraits, events, and travel. I shoot the moments between the posed ones — the
-          walk to the altar, the pause before a laugh, a street at the hour the light turns amber.
-        </p>
-        <p class="mb-4 max-w-[52ch] leading-relaxed text-ink-soft">
-          Every roll is processed and scanned by hand, no lab in between — which means the grain,
-          the light leaks, and the color shifts are mine to keep or lose. That's part of the deal
-          with film.
-        </p>
+        <h1 class="mb-5 mt-2 font-serif text-4xl italic sm:text-5xl">{about.name}</h1>
+        {about.bio.map((paragraph) => <p class="mb-4 max-w-[52ch] leading-relaxed text-ink-soft">{paragraph}</p>)}
 
         <div class="mt-8 flex flex-col gap-2 border-t border-line pt-8">
           <a
-            href="https://instagram.com"
+            href={about.instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
             class="w-fit border-b border-transparent text-sm transition-colors hover:border-accent hover:text-accent"
           >
-            Instagram — @echo.frames
+            Instagram — {about.instagramHandle}
           </a>
           <a
-            href="mailto:hello@example.com"
+            href={`mailto:${about.email}`}
             class="w-fit border-b border-transparent text-sm transition-colors hover:border-accent hover:text-accent"
           >
-            hello@example.com
+            {about.email}
           </a>
-          <span class="text-sm text-ink-soft">Based in Lucena, Quezon Province</span>
+          <span class="text-sm text-ink-soft">{about.location}</span>
         </div>
       </div>
     </div>

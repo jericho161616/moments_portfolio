@@ -62,11 +62,11 @@ const swatches = [
               src={photo.image}
               alt={photo.title}
               loading={i < 4 ? "eager" : "lazy"}
-              class="block w-full scale-[1.05] grayscale-[0.7] transition-[transform,filter] duration-700 ease-out group-hover:scale-[1.12] group-hover:grayscale-0"
+              class="block w-full scale-[1.05] transition-transform duration-700 ease-out group-hover:scale-[1.12]"
             />
           ) : (
             <div
-              class="w-full scale-[1.05] grayscale-[var(--gs,0.7)] transition-[transform,filter] duration-700 ease-out group-hover:scale-[1.12] group-hover:grayscale-0"
+              class="w-full scale-[1.05] grayscale-[var(--gs,0)] transition-transform duration-700 ease-out group-hover:scale-[1.12]"
               style={`aspect-ratio:${swatches[i % swatches.length].ratio};background:${swatches[i % swatches.length].bg};${
                 photo.category === "bw" ? "--gs:1;" : ""
               }`}

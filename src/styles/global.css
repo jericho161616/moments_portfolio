@@ -18,15 +18,45 @@ body {
  * never filtered, so nothing about how a photo looks is ever altered.
  */
 body.mode-bw {
-  background: #f1efec;
+  background: #141311;
+  color: #f1efec;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 body.mode-bw #site-nav {
-  background: rgba(241, 239, 236, 0.9);
-  border-color: #d8d4cc;
+  background: rgba(20, 19, 17, 0.9);
+  border-color: #332f29;
 }
 body.mode-bw .filter-chip[aria-selected="true"] {
-  background: #111111;
-  border-color: #111111;
+  background: #f1efec;
+  border-color: #f1efec;
+  color: #141311;
+}
+body.mode-bw .text-ink {
+  color: #f1efec;
+}
+body.mode-bw .text-ink-soft {
+  color: #b3ab9e;
+}
+body.mode-bw .text-accent {
+  color: #e0836a;
+}
+body.mode-bw .border-line {
+  border-color: #332f29;
+}
+body.mode-bw .bg-paper-2 {
+  background: #211f1a;
+}
+body.mode-bw .hover\:text-ink:hover {
+  color: #f1efec;
+}
+body.mode-bw .hover\:text-accent:hover {
+  color: #e0836a;
+}
+body.mode-bw .hover\:border-accent:hover {
+  border-color: #e0836a;
+}
+body.mode-bw .hover\:border-ink:hover {
+  border-color: #f1efec;
 }
 
 body.mode-film {
